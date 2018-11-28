@@ -1,0 +1,12 @@
+*.pyc
+*.zip
+*.pdf
+*.npy
+/tmp/*
+/ex/*
+/method/*
+__*
+/animation_demo/*
+/save/*
+/graph/*
+
