@@ -24,6 +24,8 @@ from model import reward_v02
 from irl_solver_tf import *
 from scipy.interpolate import interp1d
 from method.method import *
+from math import atan
+
 
 
 global_save_dir = './save/demo23/'
@@ -569,6 +571,27 @@ learning_rate_list = [0.5,0.5,0.5,0.5,
 
 
 
+hsc_traj_list = []
+num = 100
+start = 10000
+# range = np.linspace(start,start+num-1,num)
+d = np.random.randint(0,40000,size=(50,1))
+for i in d:
+    x,y = np.loadtxt('/home/hsc/Code/IV2019/Trajs/traj%g.txt'%(i))
+    one_traj = np.zeros([len(x)-1,2])
+    for j in range(1,len(x)):
+        one_traj[j-1,0] = pow(pow((x[j]-x[j-1]),2)+pow((y[j]-y[j-1]),2),0.5)*10
+        if (j>1):
+            one_traj[j-1,1] = atan((y[j]-y[j-1])/(x[j]-x[j-1]))-atan((y[j-1]-y[j-2])/(x[j-1]-x[j-2]))
+        else:
+            one_traj[0,1] = atan((y[j]-y[j-1])/(x[j]-x[j-1]))
+
+        hsc_traj_list.append(one_traj)
+
+
+
+
+
 a_norm_policy = None
 a_policy_hash = None
 
@@ -576,8 +599,8 @@ a_policy_hash = None
 For Hu: traj. generator @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 """
 
-"""
-a_list_policy  = ??? your generated trajectory
+
+a_list_policy  = hsc_traj_list #??? your generated trajectory
 #a_list_policy: should be a list, each component in the list should be of shape (length_of_trajectory, 2).
 #for example:
 #   [(173, 2),
@@ -588,7 +611,7 @@ THE_START_FRAME_OF_LANE_CHANGE = 0# you can use 'THE_START_OF_LANE_CHANGE = 0' i
 a_policy,a_policy_hash = reshape_for_test_traj_multi(a_list_policy,THE_START_FRAME_OF_LANE_CHANGE)
 _,a_norm_policy = sa_norm_pointer(None,None,None,a_policy)
 
-"""
+
 
 """
 end

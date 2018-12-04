@@ -263,7 +263,7 @@ class IRL_Solver_demo21(object):
       """
       For Hu: use trajectory generator @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
       """
-      if self.a_policy_hash != None and self.policy_a != None:
+      if self.a_policy_hash is not None and self.policy_a is not None:
           num_of_policy_trajectory = len(self.a_policy_hash)#the total policy_trajectory you generate
           indice_of_selection = np.random.choice(num_of_policy_trajectory,self.batch_size_for_policy,replace = False)#select some of them to feed in the batch      
           #you can modify 'self.batch_size_for_policy' in line 114
