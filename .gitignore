@@ -4,7 +4,7 @@
 *.npy
 /tmp/*
 /ex/*
-/method/*
+
 __*
 /animation_demo/*
 /save/*
