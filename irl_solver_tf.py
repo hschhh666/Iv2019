@@ -168,6 +168,7 @@ class IRL_Solver_demo21(object):
             
             self.reward_samples_debug = tf.reduce_mean(self.reward_policy_batch)
             self.reward_policy = tf.reduce_sum(self.reward_policy_batch * w)
+            self.reward_policy_batch_mean = tf.reduce_mean(self.reward_policy_batch)
 #            self.reward_policy = tf.reduce_mean(self.reward_policy_batch)
             self.reward_expert = tf.reduce_mean(self.reward_expert_batch)
     #        self.reward_policy = tf.reduce_mean(reward_policy)
@@ -209,6 +210,7 @@ class IRL_Solver_demo21(object):
         self.s_Diff_history = []
         self.regularization_loss_history = []
         self.reward_samples_debug_history = []
+        self.reward_policy_batch_mean_val_list = []
         self.tmp3 = creat_index_bias_matrix3(self.step_size,self.memory_frame, self.window_size)
         print (self.tmp3)
         
@@ -299,8 +301,9 @@ class IRL_Solver_demo21(object):
               
       
       if self.test_only == False:
-          reward_expert_val,reward_diff_val,reward_policy_val,s_Diff_val,regularization_loss_val, _,reward_samples_debug_val = sess.run([self.reward_expert,self.reward_diff, self.reward_policy, self.s_Diff,self.regularization_loss,self.train_op,self.reward_samples_debug], feed_dict = feed)
+          reward_expert_val,reward_diff_val,reward_policy_val,s_Diff_val,regularization_loss_val, _,reward_samples_debug_val, reward_policy_batch_mean_val = sess.run([self.reward_expert,self.reward_diff, self.reward_policy, self.s_Diff,self.regularization_loss,self.train_op,self.reward_samples_debug,self.reward_policy_batch_mean], feed_dict = feed)
           self.regularization_loss_history.append(regularization_loss_val)
+          self.reward_policy_batch_mean_val_list.append(reward_policy_batch_mean_val)
       else:
           reward_expert_val,reward_diff_val,reward_policy_val,s_Diff_val, reward_samples_debug_val = sess.run([self.reward_expert_batch,self.reward_diff, self.reward_policy_batch,self.s_Diff, self.reward_samples_debug], feed_dict=feed)
       self.reward_diff_history.append(reward_diff_val)
@@ -318,7 +321,7 @@ class IRL_Solver_demo21(object):
   def prepare_sess(self):
       sess = tf.Session()
       if self.test_only == False and self.load_train == False:
-          init = tf.global_variables_initializer()
+          init = tf.initialize_all_variables()
           sess.run(init)
       else:
           tf.train.Saver().restore(sess, self.save_dir+'params')

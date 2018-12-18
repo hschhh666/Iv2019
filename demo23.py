@@ -28,7 +28,7 @@ from math import atan
 
 
 
-global_save_dir = './save/demo23/'
+global_save_dir = './save/demo23hu/'
 
 action = 'v'
 #action = 'acc'
@@ -539,13 +539,13 @@ plt.show()
 
 """@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"""
 
-M = 1
+M = 6
 test_train_partition = 80
 
 learning_rate_list = [0.5,0.5,0.5,0.5,
                       0.5,0.5,0.5,0.5,
-                      0.1,0.1,0.1,0.1,
-                      0.1,0.02,0.02,0.02,
+                      0.1,0.1,0.05,0.05,
+                      0.05,0.02,0.02,0.02,
                       0.01,0.01,0.01,0.01,
                       0.01,0.01,0.01,0.01,
                       0.01,0.01,0.01,0.01,
@@ -568,53 +568,87 @@ learning_rate_list = [0.5,0.5,0.5,0.5,
 #a,a_hash = reshape_for_M_step(a_list[test_train_partition:],M)
 
 
+#@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-
-
+np.random.seed(0)
 hsc_traj_list = []
 hsc_xy_list = []
 num = 100
 start = 10000
-# range = np.linspace(start,start+num-1,num)
-d = np.random.randint(0,40000,size=(50,1))
-for i in d:
-    x,y = np.loadtxt('/home/hsc/Code/IV2019/Trajs/traj%g.txt'%(i))
-    hsc_xy_list.append(np.array([x,y]).T)
-    one_traj = np.zeros([len(x)-1,2])
-    for j in range(1,len(x)):
-        one_traj[j-1,0] = pow(pow((x[j]-x[j-1]),2)+pow((y[j]-y[j-1]),2),0.5)*10
-        if (j>1):
-            one_traj[j-1,1] = atan((y[j]-y[j-1])/(x[j]-x[j-1]))-atan((y[j-1]-y[j-2])/(x[j-1]-x[j-2]))
-        else:
-            one_traj[0,1] = atan((y[j]-y[j-1])/(x[j]-x[j-1]))
 
+#d = np.random.randint(0,40000,size=(100,1))
+#for i in d:
+#    x,y = np.loadtxt('/home/sry/new_story/trajGenerate/Trajs/traj%g.txt'%(i))
+#    hsc_xy_list.append(np.array([x,y]).T)
+#    one_traj = np.zeros([len(x)-1,2])
+#    for j in range(1,len(x)):
+#        one_traj[j-1,0] = pow(pow((x[j]-x[j-1]),2)+pow((y[j]-y[j-1]),2),0.5)*10
+#        if (j>1):
+#            one_traj[j-1,1] = atan((y[j]-y[j-1])/(x[j]-x[j-1]))-atan((y[j-1]-y[j-2])/(x[j-1]-x[j-2]))
+#        else:
+#            one_traj[0,1] = atan((y[j]-y[j-1])/(x[j]-x[j-1]))
+#            
+#    hsc_traj_list.append(one_traj)
+#
+
+
+trajGen_range = np.linspace(1,175,175)
+np.random.seed(0)
+for i in trajGen_range:
+    for k in np.linspace(0,26,27):
+#    for k in [13]:
+        x,y= np.loadtxt('/home/hsc/Code/IV2019/5poly_Trajs/5poly_traj%g_%g.txt'%(i,k))
+        hsc_xy_list.append(np.array([x,y]).T)
+        tmpv,tmpyaw = x2yaw(x,y,dt)
+        tmpyawdif = np.append( np.diff(tmpyaw),0)/dt
+#    tmpvdif = np.append(np.diff(tmpv),0)/dt
+        one_traj = np.concatenate([np.array([tmpv]),np.array([tmpyawdif])],axis = 0).T
+#        if np.random.rand() > 0.9:
         hsc_traj_list.append(one_traj)
 
+"""
+save out the trajectories
+"""
+#plt.figure()
+#cnt = 1
+#for x_ego_xy in x_ego:
+#    plt.plot(x_ego_xy[:,0],x_ego_xy[:,1],'r-')#real trajectories
+#    x_tmp = x_ego_xy[:,0]
+#    y_tmp = x_ego_xy[:,1]
+#    size_tmp = x_tmp.size
+#    x_t = x_tmp[50:size_tmp-1-50]
+#    y_t = y_tmp[50:size_tmp-1-50]
+#    np.savetxt("/home/sry/new_story/trajGenerate/TrajFromSunCode/traj%g.txt"%(cnt),[x_t,y_t])
+#    cnt = cnt+1
+"""
+end
+"""
 
 plt.figure()
-cnt = 1
 for x_ego_xy in x_ego:
     plt.plot(x_ego_xy[:,0],x_ego_xy[:,1],'r-')#real trajectories
-    x_tmp = x_ego_xy[:,0]
-    y_tmp = x_ego_xy[:,1]
-    size_tmp = x_tmp.size
-    x_t = x_tmp[50:size_tmp-1-50]
-    y_t = y_tmp[50:size_tmp-1-50]
-    np.savetxt("/home/hsc/Code/IV2019/human_trajs/TrajFromSunCode/traj%g.txt"%(cnt),[x_t,y_t])
-    cnt = cnt+1
 
 for hsc_xy in hsc_xy_list:
     plt.plot(hsc_xy[:,0],hsc_xy[:,1],'g-')#generated trajectories
-plt.figure()
+
+
+    
+        
+        
+#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ plot traj.
+
+
+
 
 a_norm_policy = None
 a_policy_hash = None
+
 
 """
 For Hu: traj. generator @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 """
 
-'''
+
 a_list_policy  = hsc_traj_list #??? your generated trajectory
 #a_list_policy: should be a list, each component in the list should be of shape (length_of_trajectory, 2).
 #for example:
@@ -625,7 +659,7 @@ a_list_policy  = hsc_traj_list #??? your generated trajectory
 THE_START_FRAME_OF_LANE_CHANGE = 0# you can use 'THE_START_OF_LANE_CHANGE = 0' if the start point in your trajectory is frame 0
 a_policy,a_policy_hash = reshape_for_test_traj_multi(a_list_policy,THE_START_FRAME_OF_LANE_CHANGE)
 _,a_norm_policy = sa_norm_pointer(None,None,None,a_policy)
-'''
+
 
 
 """
@@ -646,7 +680,7 @@ ind_hash = s_ego_hash
 
 mode = 'train'
 #'load'
-load_train = False
+load_train = True
 
 
 
@@ -675,15 +709,33 @@ if mode == 'train':
                    sampling_range_list = np.array([[0,0],[1.,8.]]),
                    )
         solver.train()
+
+    if load_train:
+            pre_reward_expert = np.loadtxt('%s/reward_expert' % global_save_dir)
+            pre_reward_diff = np.loadtxt('%s/reward_diff' % global_save_dir)
+            pre_reward_policy_unweighted = np.loadtxt('%s/reward_policy_unweighted' % global_save_dir)
+            
+            reward_expert_tmp = np.concatenate((pre_reward_expert, solver.reward_expert_history))
+            reward_policy_unweighted_tmp = np.concatenate((pre_reward_policy_unweighted, solver.reward_policy_batch_mean_val_list))
+            reward_diff_tmp = np.concatenate((pre_reward_diff, np.array(solver.reward_expert_history) - np.array(solver.reward_policy_batch_mean_val_list)))
+    else:
+        reward_expert_tmp = solver.reward_expert_history
+        reward_policy_unweighted_tmp = solver.reward_policy_batch_mean_val_list
+        reward_diff_tmp = np.array(solver.reward_expert_history) - np.array(solver.reward_policy_batch_mean_val_list)
     
-    
-    
-    plt.plot(solver.reward_diff_history,label = 'reward_diff')
-    plt.plot(solver.reward_expert_history,label = 'reward_expert')
-    plt.plot(solver.reward_policy_history,label = 'reward_policy')
+        
+    plt.figure()
+#    plt.plot(solver.reward_diff_history,label = 'reward_diff')
+    plt.plot(reward_expert_tmp,label = 'reward_expert')
+#    plt.plot(solver.reward_policy_history,label = 'reward_policy')
+    plt.plot(reward_policy_unweighted_tmp, label = 'reward_policy_unweighted')
+    plt.plot(reward_diff_tmp, label = 'reward_diff')
     plt.legend(loc='best')
-    plt.title('rward history')
-    #plt.savefig('%s/train_loss.jpg' % ann_solver2.save_dir)
+    plt.title('reward history')
+    plt.savefig('%s/train_loss.png' % global_save_dir)
+    np.savetxt('%s/reward_expert' % global_save_dir,reward_expert_tmp)
+    np.savetxt('%s/reward_policy_unweighted' % global_save_dir,reward_policy_unweighted_tmp)
+    np.savetxt('%s/reward_diff' % global_save_dir,reward_diff_tmp)
     plt.show()
 
 """@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"""
@@ -914,7 +966,7 @@ def test_multi_traj_multi_step(lmsdata,x_ego,lmsdata_diff,lmsdata_pre,a,save_dir
 
 
 
-def s_a_cross_test_multi_traj_multi_step(lmsdata,x_ego,lmsdata_diff,lmsdata_pre,a,save_dir,T_start = 0, M_test = 100):
+def s_a_cross_test_multi_traj_multi_step(lmsdata,x_ego,lmsdata_diff,lmsdata_pre,a_list_test,save_dir,T_start_s = 0,T_start_a = 0, M_test = 100):
     """
     multi-step,multi-traj,batch version of func:'test_one_traj_multi_step'
     - lmsdata,x_ego,lmsdata_diff,lmsdata_pre,a: list
@@ -922,16 +974,17 @@ def s_a_cross_test_multi_traj_multi_step(lmsdata,x_ego,lmsdata_diff,lmsdata_pre,
     batch on 's', circle on 'a'
     """
     
-    s_ego,s_ego_hash = reshape_for_test_traj_multi(x_ego,T_start)
-    s_lms,s_lms_hash = reshape_for_test_traj_multi(lmsdata,T_start)
-    s_lmsdiff,s_lmsdiff_hash = reshape_for_test_traj_multi(lmsdata_diff,T_start)
-    s_lmsdata_pre,s_lmsdata_pre_hash = reshape_for_test_traj_multi(lmsdata_pre,T_start)
+    s_ego,s_ego_hash = reshape_for_test_traj_multi(x_ego,T_start_s)
+    s_lms,s_lms_hash = reshape_for_test_traj_multi(lmsdata,T_start_s)
+    s_lmsdiff,s_lmsdiff_hash = reshape_for_test_traj_multi(lmsdata_diff,T_start_s)
+    s_lmsdata_pre,s_lmsdata_pre_hash = reshape_for_test_traj_multi(lmsdata_pre,T_start_s)
     #s = np.concatenate([s_lms,s_ego],axis = 1)
-    a,a_hash = reshape_for_test_traj_multi(a,T_start)
+    a,a_hash = reshape_for_test_traj_multi(a_list_test,T_start_a)
     s_norm_new,a_norm_new = sa_norm_pointer(s_lms,s_lmsdiff,s_ego,a)
     n = np.shape(x_ego)[0]
+    m = np.shape(a_list_test)[0]
     
-    s_a_cross_reward = np.zeros([n,n])
+    s_a_cross_reward = np.zeros([m,n])
     ind_hash = s_ego_hash
     
     with tf.Graph().as_default():#creat a new clean graph
@@ -954,7 +1007,7 @@ def s_a_cross_test_multi_traj_multi_step(lmsdata,x_ego,lmsdata_diff,lmsdata_pre,
                    )
         sess = solver_test.prepare_sess()
         for cnt,i_a in enumerate(a_hash):
-            print ('processing environment:',cnt)
+            print ('processing trajectory:',cnt)
             a_hash_same_traj = np.zeros_like(a_hash) + i_a
             solver_test.a_hash = a_hash_same_traj
             solver_test._reset()
@@ -966,8 +1019,9 @@ def s_a_cross_test_multi_traj_multi_step(lmsdata,x_ego,lmsdata_diff,lmsdata_pre,
 
     
     return s_a_cross_reward
-    
-    
+
+
+
 def visulization_1(nav,lmsFrame,reward_test,gt,y_label = '',save_dir = '.'):
     plot_nav(nav,lmsFrame)
     plt.figure()
@@ -1070,7 +1124,7 @@ def s_a_cross_test(yaw_test_range,vdiff_test_range,cur_nav,cur_traj,dt,depict = 
         os.mkdir(save_dir)
     except:
         pass
-    
+
     T_nav,_ = np.shape(cur_nav)
     _,T_traj,_ = np.shape(cur_traj)
     T = min(T_nav,T_traj)
@@ -1100,17 +1154,25 @@ T = 150
 
 """
 # criterion 1 """
-x_ego_test = x_ego[:test_train_partition]
-a_list_test = a_list[:test_train_partition]
-lmsdata_test = lmsdata[:test_train_partition]
-lmsdata_diff_test = lmsdata_diff[:test_train_partition]
-lmsdata_pre_test = lmsdata_pre[:test_train_partition]
+test_on_train_set = True
+if test_on_train_set:
+    x_ego_test = x_ego[test_train_partition:]
+    a_list_test = a_list[test_train_partition:]
+    lmsdata_test = lmsdata[test_train_partition:]
+    lmsdata_diff_test = lmsdata_diff[test_train_partition:]
+    lmsdata_pre_test = lmsdata_pre[test_train_partition:]
+else:
+    x_ego_test = x_ego[:test_train_partition]
+    a_list_test = a_list[:test_train_partition]
+    lmsdata_test = lmsdata[:test_train_partition]
+    lmsdata_diff_test = lmsdata_diff[:test_train_partition]
+    lmsdata_pre_test = lmsdata_pre[:test_train_partition]
 
-Dis_a = L2_dis_matrix(a_list_test,48,98)#compute dis of 'action'
-Dis_x = L2_dis_matrix(x_ego_test,48,98)
 
 
-
+#L2_dis_matrix is modified
+Dis_a = L2_dis_matrix(a_list_test,48,77)#compute dis of 'action'
+Dis_x = L2_dis_matrix(x_ego_test,48,77)
 
 #plt.scatter(np.reshape(Dis_a,[-1]),np.reshape(Dis_x,[-1]))
 
@@ -1118,8 +1180,7 @@ Dis_x = L2_dis_matrix(x_ego_test,48,98)
 #reward_all = test_multi_traj_multi_step(lmsdata,x_ego,lmsdata_diff,lmsdata_pre,a_list,global_save_dir,T_start = 48, M_test = 50)
 
 #return value: row -> action, column -> state
-s_a_cross_reward_all = s_a_cross_test_multi_traj_multi_step(lmsdata_test,x_ego_test,lmsdata_diff_test,lmsdata_pre_test,a_list_test,global_save_dir,T_start = 48, M_test = 20)
-
+s_a_cross_reward_all = s_a_cross_test_multi_traj_multi_step(lmsdata_test,x_ego_test,lmsdata_diff_test,lmsdata_pre_test,a_list_test,global_save_dir,T_start_s = 48,T_start_a = 48, M_test = 20)
 #s_a_cross_reward_all  = s_a_cross_reward_all/np.mean(s_a_cross_reward_all,axis = 0,keepdims = True)
 plt.figure()
 plt.imshow(s_a_cross_reward_all,cmap = 'Greys_r')
@@ -1127,19 +1188,14 @@ plt.colorbar()
 plt.show()
 
 
-Dis = Dis_x
-#Dis = Dis_a
-bin_num = 100
-
-
-def dist_reward_plot_for_matrix(Dis,bin_num,s_a_cross_reward_all):
+def dist_reward_plot_for_matrix(Dis,bin_num,s_a_cross_reward_all,savepath = -1):
     gap = np.max(Dis + 0.0001)/bin_num
     bins = np.zeros(bin_num)
     traj_per_bin = np.zeros(bin_num)
-    n = Dis.shape[0]
+    n,m = Dis.shape
     point = []
     for i in xrange(n):
-        for j in xrange(n):
+        for j in xrange(m):
             idx = np.int(np.floor(Dis[i,j]/gap))
             bins[idx] = bins[idx] + s_a_cross_reward_all[i,j]
             traj_per_bin[idx] = traj_per_bin[idx] + 1
@@ -1150,31 +1206,86 @@ def dist_reward_plot_for_matrix(Dis,bin_num,s_a_cross_reward_all):
     plt.plot(bins,'o')
     plt.xlabel('distance to ground truth')
     plt.ylabel('reward')
+    plt.title('histogram')
+    if savepath != -1:
+        plt.savefig(savepath)
     plt.show()
     plt.figure()
     plt.scatter(point[:,0],point[:,1])
+    plt.title('scatter')
+    plt.show()
+    return bins
+
+def debug_plot(bins_generated_traj,bins_real_traj,savepath = -1):
+    plt.figure()
+    plt.plot(bins_generated_traj,'go',label = 'generated_traj')
+    plt.plot(bins_real_traj,'ro',label = 'real_traj')
+    plt.xlabel('distance to ground truth')
+    plt.ylabel('reward')
+    plt.legend(loc = 'best')
+    plt.title('comparison on reward between real traj. and generated traj.(test set)')
+    if (savepath != -1):
+        plt.savefig(savepath)
     plt.show()
     
-dist_reward_plot_for_matrix(Dis,bin_num,s_a_cross_reward_all)
+bin_num = 100
+bins_real_traj = dist_reward_plot_for_matrix(Dis_a,bin_num,s_a_cross_reward_all)
+
+hsc_a_list_test = []
+for tmp in hsc_traj_list:
+    if np.random.rand() > 0.9:
+        hsc_a_list_test.append(tmp)
+
+s_a_cross_reward_all_policy = s_a_cross_test_multi_traj_multi_step(lmsdata_test,x_ego_test,lmsdata_diff_test,lmsdata_pre_test,hsc_a_list_test,global_save_dir,T_start_s = 48,T_start_a = 0, M_test = 20)
+plt.figure()
+plt.imshow(s_a_cross_reward_all_policy,cmap = 'Greys_r')
+plt.colorbar()
+plt.show()
+Dis_a_hsc = L2_dis_matrix(hsc_a_list_test,0,29,a_list_test,48,77)
+    
+bins_generated_traj = dist_reward_plot_for_matrix(Dis_a_hsc,bin_num,s_a_cross_reward_all_policy)
+
+
+cur_reward_expert_tmp = np.loadtxt('%s/reward_expert' % global_save_dir)
+cur_iteation = np.size(cur_reward_expert_tmp)
+current_training_stage_dir = '%s/%diteration_%dM_TestOnTrainSet_%d' % (global_save_dir,cur_iteation, solver.memory_frame,test_on_train_set )
+try:
+    os.mkdir(current_training_stage_dir)
+except:
+    pass
+"""plot situation 1#"""
+dist_reward_plot_for_matrix(Dis_a_hsc[:,[1]],bin_num,s_a_cross_reward_all_policy[:,[1]],savepath = '%s/1' % current_training_stage_dir)
+"""plot situation 2#"""
+dist_reward_plot_for_matrix(Dis_a_hsc[:,[2]],bin_num,s_a_cross_reward_all_policy[:,[2]],savepath = '%s/2' % current_training_stage_dir)
+"""plot situation 3#"""
+dist_reward_plot_for_matrix(Dis_a_hsc[:,[3]],bin_num,s_a_cross_reward_all_policy[:,[3]],savepath = '%s/3' % current_training_stage_dir)
+"""plot situation 4#"""
+dist_reward_plot_for_matrix(Dis_a_hsc[:,[4]],bin_num,s_a_cross_reward_all_policy[:,[4]],savepath = '%s/4' % current_training_stage_dir)
+"""plot total"""
+debug_plot(bins_generated_traj,bins_real_traj,savepath = '%s/total' % current_training_stage_dir)
+
 
 
 arg_max_s_a_cross_reward_all = np.argmax(s_a_cross_reward_all,axis = 0)
+arg_max_s_a_cross_reward_all_policy = np.argmax(s_a_cross_reward_all_policy,axis = 0)
 
+def selection_plot(arg_max_s_a_cross_reward_all,Dis):
+    Dis_x_selected = []
+    for i in np.arange(np.size(arg_max_s_a_cross_reward_all) ):
+        Dis_x_selected.append( Dis[i ,arg_max_s_a_cross_reward_all[i]] )
+    #hist,edge = np.histogram(Dis_x_selected, bin_num, (0,max(Dis_x_selected)+0.001) )
+    
+    n,edge,_ = plt.hist(Dis_x_selected, bin_num, (0,max(Dis_x_selected)+0.001),normed=True, label = 'selected by reward' )
+    _,_,_ = plt.hist(np.reshape(Dis,[-1]),bin_num,(0,max(Dis_x_selected)+0.001),normed=True,label = 'random choices')
+    plt.xlabel('distance to ground truth')
+    plt.ylabel('frequency')
+    plt.legend(loc='best')
+    plt.title('precision_fig')
+    plt.show()
 
-Dis_x_selected = []
-for i in np.arange(np.size(arg_max_s_a_cross_reward_all) ):
-    Dis_x_selected.append( Dis[i ,arg_max_s_a_cross_reward_all[i]] )
-#hist,edge = np.histogram(Dis_x_selected, bin_num, (0,max(Dis_x_selected)+0.001) )
-
-n,edge,_ = plt.hist(Dis_x_selected, bin_num, (0,max(Dis_x_selected)+0.001),normed=True, label = 'selected by reward' )
-_,_,_ = plt.hist(np.reshape(Dis,[-1]),bin_num,(0,max(Dis_x_selected)+0.001),normed=True,label = 'random choices')
-plt.xlabel('distance to ground truth')
-plt.ylabel('frequency')
-plt.legend(loc='best')
-plt.title('precision_fig')
-plt.show()
-
-
+selection_plot(arg_max_s_a_cross_reward_all,Dis_x)
+selection_plot(arg_max_s_a_cross_reward_all,Dis_a_hsc)
+    
 """log:
 cur_nav = nav_list[11]#left lane change
 cur_traj = traj_list[12]#right lane change
